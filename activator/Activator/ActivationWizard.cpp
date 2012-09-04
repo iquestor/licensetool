@@ -173,18 +173,21 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 
 				}
 				break;
+				case NM_CLICK:
+				{
+					if (wParam  == IDC_SYSLINK_CONTACT)
+					{
+						ShellExecute(NULL, L"open", L"http://www.iquestcorp.com/contact-us", 0, 0, SW_SHOWNORMAL);
+					}
+				}
+				break;
 			}
 			break;
 		}
 		break;
 		case WM_COMMAND:
 		{
-			switch (LOWORD(wParam))
-			{
-				default:
-				break;
-			}
-			break;
+
 		}
 		break;
 		default:
