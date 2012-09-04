@@ -11,6 +11,9 @@
 // Windows Header Files:
 #include <windows.h>
 
+#include "Commctrl.h"
+#include "Shellapi.h"
+
 // C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>
