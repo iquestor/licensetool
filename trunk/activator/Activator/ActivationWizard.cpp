@@ -402,7 +402,9 @@ void LoadRegistry(const wchar_t * key, const wchar_t * name, std::wstring & valu
 
 	if (rc != ERROR_SUCCESS)
 	{ 
+#ifndef NDEBUG
 		MessageBox(0, L"Failed accessing registry.", L"Error", MB_OK | MB_ICONERROR);
+#endif
 	} 
 
 	rc = RegQueryValueEx(dmKey, name, 0, &dwType, (LPBYTE)sTemp, &len);
