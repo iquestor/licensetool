@@ -139,8 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\iQAgent-App-Icons\iQAgent-72x72.png" />
+    <None Include="..\..\..\..\iQAgent-App-Icons\iQagent_Globe.bmp" />
+    <None Include="..\..\..\..\iQAgent-App-Icons\iQagent_GLobe_150.bmp" />
     <None Include="Activator.ico" />
     <None Include="bitmap1.bmp" />
+    <None Include="bitmap2.bmp" />
     <None Include="bitmap_header.bmp" />
     <None Include="small.ico" />
   </ItemGroup>

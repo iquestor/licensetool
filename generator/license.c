@@ -204,6 +204,36 @@ int validate_license(const char * license, unsigned * limit, const char * master
 	return ret;
 }
 
+/*****************************************************************************/
+
+char * get_license(const char * license, const char * master_key)
+{
+	int ret = -1;
+	
+	unsigned int decoded_len = strlen(license);
+	
+	char * decoded = (char *)base32_decode(license, &decoded_len);
+
+	/**
+	 * XOR Decrypt.
+	 */
+	unsigned mkey_index = 0;
+		
+	for (unsigned i = 0; i < decoded_len; i++)
+	{
+		decoded[i] ^= master_key[mkey_index++];
+		
+		if (mkey_index == strlen(master_key))
+		{
+			mkey_index = 0;
+		}
+	}
+
+	return decoded;
+}
+
+/*********************************************************************************/
+
 #if 0
 int main()
 {
