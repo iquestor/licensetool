@@ -149,13 +149,48 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 					PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT);
 
 					std::wstring product_id;
-
 					LoadRegistry(KEY_SOFTWARE_MICROSOFT, L"ProductId", product_id);
-
 					g_uniqueid = product_id;
 
-					SetWindowText(GetDlgItem(hDlg, IDC_EDIT_STEP_ONE_SYSTEM_ID), g_uniqueid.c_str());
+					// todo: get decoded license info and show it. 
+					std::wstring license;
+					
+					// get activation license
+					LoadRegistry(KEY_SOFTWARE_IQAGENT, L"license", license);
+					
+					// get unique master license
+					// IF there was something in the registry key
+					if (strlen(ws2s(license).c_str()) > 0)
+					{
+					    // decode licensing
+						char* myLicenseInfo = get_license(ws2s(license).c_str(),ws2s(g_uniqueid).c_str());
+				
+					// if it was valid
+					if (myLicenseInfo)
+						{
+							// get company name and number of allowed devices
+							std::wstring company_name = s2ws(strtok(myLicenseInfo, ":"));
+							std::wstring devices = s2ws(strtok(0, ":"));
+	
+							if (strlen(ws2s(company_name).c_str()))
+							{
+							SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_COMPANY), company_name.c_str());
+							}
+
+							if (strlen(ws2s(devices).c_str()))
+							{
+							SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_NUMDEVICESINT), devices.c_str());
+							}
+
+						}
+													
 				}
+
+                 // show master license text
+				SetWindowText(GetDlgItem(hDlg, IDC_EDIT_STEP_ONE_SYSTEM_ID), g_uniqueid.c_str());
+		
+				}
+
 				break;
 				case PSN_QUERYCANCEL:
 				{
@@ -329,6 +364,9 @@ INT_PTR CALLBACK ActivationWizard::StepThreeProc(HWND hDlg, UINT uMsg, WPARAM wP
 				break;
 				case PSN_WIZFINISH:
 				{
+					// TODO: RESTART iQagent Service
+					system("net start iqagent");
+					
 					SetWindowLong(hDlg, 0 /*DWL_MSGRESULT*/, false);
 					exit(0);
 				}
