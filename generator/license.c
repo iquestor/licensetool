@@ -39,6 +39,7 @@
 char * generate_license(const unsigned limit, const char * company_name, const char * master_key)
 {
 	assert(limit > 0);
+	assert (isnumeric(limit));
 	assert(company_name);
 	assert(master_key);
 
@@ -73,7 +74,7 @@ char * generate_license(const unsigned limit, const char * company_name, const c
 
 	strcat(buf, hmac_hex);
 	
-	LOG("buf = %s\n", buf);
+	//LOG("buf = %s\n", buf);
 
 	/**
 	 * XOR encrypt.
@@ -120,7 +121,7 @@ int validate_license(const char * license, unsigned * limit, const char * master
 		}
 	}
 
-	LOG("decoded = %s\n", decoded);
+	//LOG("decoded = %s\n", decoded);
 	
 	// get company name
 	char * company_name = strtok(decoded, ":");
