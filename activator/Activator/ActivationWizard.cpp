@@ -212,7 +212,7 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 				{
 					if (wParam  == IDC_SYSLINK_CONTACT)
 					{
-						ShellExecute(NULL, L"open", L"http://www.iquestcorp.com/contact-us", 0, 0, SW_SHOWNORMAL);
+						ShellExecute(NULL, L"open", L"http://www.iqagent.com/support", 0, 0, SW_SHOWNORMAL);
 					}
 				}
 				break;
