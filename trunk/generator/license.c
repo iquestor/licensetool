@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#include <iostream>
+
 #include "base32.h"
 #include "hmac_sha2.h"
 
@@ -50,11 +53,13 @@ char * generate_license(const unsigned limit, const char * company_name, const c
 	strcpy(buf, company_name);
 	strcat(buf, ":");
 	
-	char limit_buf[8] = { 0 };
-	
+	char limit_buf[8] = { 0 };	
 	sprintf(limit_buf, "%d", limit);
-	
 	strcat(buf, limit_buf);
+	
+	//char data_buf[8] = { 0 };
+	//sprintf(data_buf, "%d", disableData);	
+	//strcat(buf, data_buf);
 	
 	unsigned char mac[128] = { 0 };
 	
@@ -97,24 +102,94 @@ char * generate_license(const unsigned limit, const char * company_name, const c
 	
 	return license;
 }
+///////////////////////////////////////////////////////////////////////////////////////////
+char * generate_license(const unsigned limit, const char * company_name, bool disableData, const char * expiry, const char * master_key)
+{
+	assert(limit > 0);
+	assert(isnumeric(limit));
+	assert(company_name);
+	assert(master_key);
 
+	char * license = 0;
+
+	char buf[512] = { 0 };
+
+	strcpy(buf, company_name);
+	strcat(buf, ":");
+
+	char limit_buf[8] = { 0 };
+	sprintf(limit_buf, "%d", limit);
+	strcat(buf, limit_buf);
+	strcat(buf, ":");
+
+	char data_buf[8] = { 0 };
+	sprintf(data_buf, "%x\0", disableData);	
+	strcat(buf, data_buf);
+	strcat(buf, ":");
+
+	char expiry_buf[10] = { 0 };
+	strcpy(expiry_buf, expiry);
+	strcat(buf, expiry_buf);
+	
+	unsigned char mac[128] = { 0 };
+
+	hmac_sha512(
+		(const unsigned char *)master_key, strlen(master_key),
+		(unsigned char *)buf, strlen(buf), mac, sizeof(mac)
+	);
+
+	strcat(buf, ":");
+
+	char hmac_hex[64] = { 0 };
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		sprintf(&hmac_hex[i * 2], "%02x", mac[i]);
+	}
+
+	strcat(buf, hmac_hex);
+
+	//LOG("buf = %s\n", buf);
+
+	/**
+	 * XOR encrypt.
+	*/
+	unsigned mkey_index = 0;
+
+	unsigned buf_len = strlen(buf);
+
+	for (unsigned i = 0; i < buf_len; i++)
+	{
+		buf[i] ^= master_key[mkey_index++];
+
+		if (mkey_index == strlen(master_key))
+		{
+			mkey_index = 0;
+		}
+	}
+
+	license = base32_encode(buf, buf_len); // caller must free
+
+	return license;
+}
+//////////////////////////////////////////////////////////////////////////////////////////
 int validate_license(const char * license, unsigned * limit, const char * master_key)
 {
 	int ret = -1;
-	
+
 	unsigned int decoded_len = strlen(license);
-	
+
 	char * decoded = (char *)base32_decode(license, &decoded_len);
 
 	/**
 	 * XOR Decrypt.
 	 */
 	unsigned mkey_index = 0;
-		
+
 	for (unsigned i = 0; i < decoded_len; i++)
 	{
 		decoded[i] ^= master_key[mkey_index++];
-		
+
 		if (mkey_index == strlen(master_key))
 		{
 			mkey_index = 0;
@@ -122,6 +197,11 @@ int validate_license(const char * license, unsigned * limit, const char * master
 	}
 
 	//LOG("decoded = %s\n", decoded);
+
+	int i, count;
+	for (i = 0, count = 0; decoded[i]; i++)
+		count += (decoded[i] == ':');
+
 	
 	// get company name
 	char * company_name = strtok(decoded, ":");
@@ -202,6 +282,137 @@ int validate_license(const char * license, unsigned * limit, const char * master
 	
 	free(encoded);
 	
+	return ret;
+}
+///////////////////////////////////////////////////////////////////////////////
+int validate_license(const char * license, unsigned * limit, bool * disableData, std::string expiry, const char * master_key)
+{
+	
+	int ret = -1;
+	unsigned int decoded_len = strlen(license);
+	char * decoded = (char *)base32_decode(license, &decoded_len);
+
+	/**
+	 * XOR Decrypt.
+	 */
+	unsigned mkey_index = 0;
+
+	for (unsigned i = 0; i < decoded_len; i++)
+	{
+		decoded[i] ^= master_key[mkey_index++];
+
+		if (mkey_index == strlen(master_key))
+		{
+			mkey_index = 0;
+		}
+	}
+
+	//std::cout << "decoded = " << decoded << std::endl;
+	int countItems = 0;
+	for (int i = 0; decoded[i]; i++) countItems += (decoded[i] == ':');
+	if (countItems==2) return validate_license(license, limit, master_key);
+
+	// get company name
+	char * company_name = strtok(decoded, ":");
+
+	if (!company_name)
+	{
+		return -1;
+	}
+
+	//std::cout << "company_name = " << company_name << std::endl;
+
+	// get limit
+	char * limit_str = strtok(0, ":");
+
+	if (!limit_str)
+	{
+		return -1;
+	}
+
+	//std::cout << "limit_str = " << limit_str << std::endl;
+
+	// get disableData
+	char * data_str = strtok(0, ":");
+
+	if (!data_str)
+	{
+		return -1;
+	}
+
+	//else std::cout << "data_str = " << data_str << std::endl;
+
+	char * expiry_str = strtok(0, ":");
+
+	if (!expiry_str)
+	{
+		std::cout << "didnt find expiry." << std::endl;
+		//return -1;
+	}
+
+	//else std::cout << "expiry_str = " << expiry_str << std::endl;
+
+	// get hex for testing
+	char * hex_str = strtok(0, ":");
+	//std::cout << "hex_str = " << hex_str << std::endl;
+
+	char buf[512] = { 0 };
+
+	strcpy(buf, company_name);
+	strcat(buf, ":");
+	strcat(buf, limit_str);
+	strcat(buf, ":");
+	strcat(buf, data_str);
+	strcat(buf, ":");
+	strcat(buf, expiry_str);
+
+	unsigned char mac[128] = { 0 };
+
+	hmac_sha512(
+		(const unsigned char *)master_key, strlen(master_key),
+		(unsigned char *)buf, strlen(buf), mac, sizeof(mac)
+	);
+
+	strcat(buf, ":");
+
+	char hmac_hex[64] = { 0 };
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		sprintf(&hmac_hex[i * 2], "%02x", mac[i]);
+	}
+
+	strcat(buf, hmac_hex);
+
+	//std::cout << "buf = "<< buf << std::endl;
+
+	free(decoded);
+
+	unsigned buf_len = strlen(buf);
+
+	/**
+	 * XOR encrypt.
+	*/
+	mkey_index = 0;
+
+	for (unsigned i = 0; i < buf_len; i++)
+	{
+		buf[i] ^= master_key[mkey_index++];
+
+		if (mkey_index == strlen(master_key))
+		{
+			mkey_index = 0;
+		}
+	}
+
+	char * encoded = base32_encode(buf, buf_len);
+
+	//std::cout << "a = " << license << ", b = " << encoded << std::endl;
+
+	ret = strcmp(license, encoded);
+
+	free(encoded);
+
 	return ret;
 }
 

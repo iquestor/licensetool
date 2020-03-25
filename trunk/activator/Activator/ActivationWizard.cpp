@@ -15,6 +15,8 @@ std::wstring g_uniqueid;
 void SaveRegistry(const wchar_t * key, const wchar_t * name, const wchar_t * value);
 void LoadRegistry(const wchar_t * key, const wchar_t * name, std::wstring & value);
 
+int countItems = 0; // number of license items.
+
 bool is64bit()
 {
 	bool ret;
@@ -151,7 +153,7 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 					std::wstring product_id;
 					LoadRegistry(KEY_SOFTWARE_MICROSOFT, L"ProductId", product_id);
 					g_uniqueid = product_id;
-
+					
 					// todo: get decoded license info and show it. 
 					std::wstring license;
 					
@@ -168,10 +170,15 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 					// if it was valid
 					if (myLicenseInfo)
 						{
-							// get company name and number of allowed devices
+						
+						// get number items in licesne string. 
+						for (int i = 0; myLicenseInfo[i]; i++) countItems += (myLicenseInfo[i] == ':');
+
+						     // get company name and number of allowed devices
 							std::wstring company_name = s2ws(strtok(myLicenseInfo, ":"));
 							std::wstring devices = s2ws(strtok(0, ":"));
-	
+							
+								
 							if (strlen(ws2s(company_name).c_str()))
 							{
 							SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_COMPANY), company_name.c_str());
@@ -180,6 +187,27 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 							if (strlen(ws2s(devices).c_str()))
 							{
 							SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_NUMDEVICESINT), devices.c_str());
+							}
+
+							if (countItems > 2)
+							{
+								std::wstring DisableData = s2ws(strtok(0, ":"));
+								std::wstring expiryDate = s2ws(strtok(0, ":"));
+								std::wstring dstring = s2ws("(Info Only)");
+								std::wstring estring = s2ws("Expires: ");
+								
+								
+								if (strlen(ws2s(DisableData).c_str()))
+								{
+									if(strcmp(ws2s(DisableData).c_str(),"0"))
+									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_DATAENABLED), dstring.c_str());
+								}
+
+								if (strlen(ws2s(expiryDate).c_str()))
+								{
+									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_EXPIRY), estring.c_str());
+									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_EXPIRY), expiryDate.c_str());
+								}
 							}
 
 						}
@@ -212,7 +240,7 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 				{
 					if (wParam  == IDC_SYSLINK_CONTACT)
 					{
-						ShellExecute(NULL, L"open", L"http://www.iqagent.com/support", 0, 0, SW_SHOWNORMAL);
+						ShellExecute(NULL, L"open", L"https://www.iqagent.com/support", 0, 0, SW_SHOWNORMAL);
 					}
 				}
 				break;
@@ -286,11 +314,14 @@ INT_PTR CALLBACK ActivationWizard::StepTwoProc(HWND hDlg, UINT uMsg, WPARAM wPar
 
 					std::string narrow = ws2s(license);
 
-					unsigned limit = 0;
+					unsigned limit = 0; 
+					std::string expiryDate = "04-01-2020";
+					bool * dataDisabled = 0;
 #if 0
 					if (validate_license("GYXUWBBVKEAEQUAJJJDVSCSHKRFHGQASIICBAVSH", &limit, "p@$$w0rd") == 0)
 #else
-					if (validate_license(narrow.c_str(), &limit, ws2s(g_uniqueid).c_str()) == 0)
+					
+					if (validate_license(narrow.c_str(), &limit, dataDisabled, expiryDate.c_str(), ws2s(g_uniqueid).c_str()) == 0)
 #endif
 					{
 						wchar_t buf[512] = { 0 };
@@ -365,7 +396,7 @@ INT_PTR CALLBACK ActivationWizard::StepThreeProc(HWND hDlg, UINT uMsg, WPARAM wP
 				case PSN_WIZFINISH:
 				{
 					// TODO: RESTART iQagent Service
-					system("net start iqagent");
+					//system("net start iqagent");
 					
 					SetWindowLong(hDlg, 0 /*DWL_MSGRESULT*/, false);
 					exit(0);
