@@ -9,7 +9,9 @@
  * @param master_key The master key.
  */
 char * generate_license(const unsigned limit, const char * company_name, const char * master_key);
+char * generate_license(const unsigned limit, const char * company_name, bool disableData, const char * expiry, const char * master_key);
 int validate_license(const char * license, unsigned * limit, const char * master_key);
+int validate_license(const char * license, unsigned * limit, bool * disableData, std::string expiry, const char * master_key);
 char * get_license(const char * license, const char * master_key);
 
 #endif // LICENSE_H
