@@ -315,7 +315,7 @@ INT_PTR CALLBACK ActivationWizard::StepTwoProc(HWND hDlg, UINT uMsg, WPARAM wPar
 					std::string narrow = ws2s(license);
 
 					unsigned limit = 0; 
-					std::string expiryDate = "04-01-2020";
+					std::string expiryDate = "00-00-0000";
 					bool * dataDisabled = 0;
 #if 0
 					if (validate_license("GYXUWBBVKEAEQUAJJJDVSCSHKRFHGQASIICBAVSH", &limit, "p@$$w0rd") == 0)

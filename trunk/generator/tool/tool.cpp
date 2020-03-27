@@ -77,7 +77,8 @@ int main(int argc, char * argv[])
 	
 	char * license = generate_license(devices, company, disableData, expiry,  master_key);
 	unsigned int * d = &devices;
-	int res = validate_license(license, d, disableData, expiry, master_key);
+	bool * dataDisabled = 0;
+	int res = validate_license(license, d, dataDisabled, expiry, master_key);
 
 	if(!res) std::cout << "License validated!" << std::endl;
 	else std::cout<< "Invalid license, code:[" << res << "]" << std::endl;
