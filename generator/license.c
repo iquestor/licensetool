@@ -103,7 +103,7 @@ char * generate_license(const unsigned limit, const char * company_name, const c
 	return license;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-char * generate_license(const unsigned limit, const char * company_name, bool disableData, const char * expiry, const char * master_key)
+char * generate_license(const unsigned limit, const char * company_name, bool disableData, const char * expiry, unsigned int lType, const char * master_key)
 {
 	assert(limit > 0);
 	assert(isnumeric(limit));
@@ -130,7 +130,12 @@ char * generate_license(const unsigned limit, const char * company_name, bool di
 	char expiry_buf[10] = { 0 };
 	strcpy(expiry_buf, expiry);
 	strcat(buf, expiry_buf);
-	
+	strcat(buf, ":");
+
+	char type_buf[8] = { 0 };
+	sprintf(type_buf, "%d", lType);
+	strcat(buf, type_buf);
+		
 	unsigned char mac[128] = { 0 };
 
 	hmac_sha512(
@@ -285,7 +290,7 @@ int validate_license(const char * license, unsigned * limit, const char * master
 	return ret;
 }
 ///////////////////////////////////////////////////////////////////////////////
-int validate_license(const char * license, unsigned * limit, bool * disableData, std::string expiry, const char * master_key)
+int validate_license(const char * license, unsigned * limit, bool * disableData, std::string expiry, unsigned int * lType, const char * master_key)
 {
 	
 	int ret = -1;
@@ -307,7 +312,8 @@ int validate_license(const char * license, unsigned * limit, bool * disableData,
 		}
 	}
 
-	//std::cout << "decoded = " << decoded << std::endl;
+	std::cout << "decoded = " << decoded << std::endl;
+
 	int countItems = 0;
 	for (int i = 0; decoded[i]; i++) countItems += (decoded[i] == ':');
 	if (countItems==2) return validate_license(license, limit, master_key);
@@ -350,7 +356,14 @@ int validate_license(const char * license, unsigned * limit, bool * disableData,
 		//return -1;
 	}
 
-	//else std::cout << "expiry_str = " << expiry_str << std::endl;
+	// get LICENSE TYPE. 1 = perpetual, 2 = SAAS
+	char * lType_str = strtok(0, ":");
+
+	if (!lType_str)
+	{
+		return -1;
+	}
+
 
 	// get hex for testing
 	char * hex_str = strtok(0, ":");
@@ -365,6 +378,8 @@ int validate_license(const char * license, unsigned * limit, bool * disableData,
 	strcat(buf, data_str);
 	strcat(buf, ":");
 	strcat(buf, expiry_str);
+	strcat(buf, ":");
+	strcat(buf, lType_str);
 
 	unsigned char mac[128] = { 0 };
 

@@ -13,15 +13,17 @@ int main(int argc, char * argv[])
 {
 	char company[512] = { 0 };
 	char dev[5] = { 0 } ;
+	char licType[5] = { 0 };
 	char datapoints[5] = { 0 };
 	char expiry[10] = { 0 };
 	char months[5] = { 0 };
 	char master_key[512] = { 0 };
-	unsigned int devices = 0; 
+	unsigned int devices = 0;
+	unsigned int ilType = 0;
 	unsigned int iMonths = 0;
 	bool disableData = 0;
 
-	// test for numeric, non-zero number of devices. 
+	// test for company name. 
 	while (strlen(company) < 3)
 	{
 		std::cout << "Enter your Company Name:" << std::endl;
@@ -67,6 +69,18 @@ int main(int argc, char * argv[])
 		
 	sprintf(expiry,"%0d-%0d-%d\0", tm.tm_mon + 1 ,tm.tm_mday ,(tm.tm_year + 1900));
 	std::cout << "License Expiry Date is: " << expiry << std::endl;
+
+	// test for numeric, non-zero number of devices. 
+	while (ilType != 1 && ilType != 2)
+	{
+		std::cout << "License Type (1=Perpetual, 2=Subscription):" << std::endl;
+		std::cin.getline(licType, sizeof(licType));
+		ilType = atoi(licType);
+		if (ilType != 1 && ilType != 2) { std::cout << "[" << ilType << "] isn't a valid type. " << std::endl; }
+	}
+
+	if (ilType == 1) std::cout << "License type: Perpetual." << std::endl;
+	else std::cout << "License type: Subscription." << std::endl;
 	
 	while (strlen(master_key) < 10)
 	{
@@ -75,16 +89,18 @@ int main(int argc, char * argv[])
 		if (strlen(master_key) < 10) std::cout << "[" << master_key << "] isn't a valid master_key!\n" << std::endl;
 	}
 	
-	char * license = generate_license(devices, company, disableData, expiry,  master_key);
+	char * license = generate_license(devices, company, disableData, expiry, ilType, master_key);
 	unsigned int * d = &devices;
+	unsigned int * lt = &ilType;
 	bool * dataDisabled = 0;
-	int res = validate_license(license, d, dataDisabled, expiry, master_key);
+	int res = validate_license(license, d, dataDisabled, expiry, lt, master_key);
 
 	if(!res) std::cout << "License validated!" << std::endl;
 	else std::cout<< "Invalid license, code:[" << res << "]" << std::endl;
 	std::cout << "Your License Key:" << license << std::endl;
-
+	std::cout << "Press any key to exit.";
 	std::cin.get();
+	
 
 	return 0;
 }
