@@ -193,8 +193,11 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 							{
 								std::wstring DisableData = s2ws(strtok(0, ":"));
 								std::wstring expiryDate = s2ws(strtok(0, ":"));
+								std::wstring perpExpiryString = s2ws(" (Annual Maintenance)");
+								std::wstring licType = s2ws(strtok(0, ":"));
 								std::wstring dstring = s2ws("(Info Only)");
 								std::wstring estring = s2ws("Expires: ");
+								std::wstring tstring = s2ws("Type: ");
 								
 								
 								if (strlen(ws2s(DisableData).c_str()))
@@ -207,6 +210,16 @@ INT_PTR CALLBACK ActivationWizard::StepOneProc(HWND hDlg, UINT uMsg, WPARAM wPar
 								{
 									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_EXPIRY), estring.c_str());
 									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_EXPIRY), expiryDate.c_str());
+								}
+
+								if (strlen(ws2s(licType).c_str()))
+								{
+									SetWindowText(GetDlgItem(hDlg, IDC_STATIC_LABEL_TYPE), tstring.c_str());
+									if (!strcmp(ws2s(licType).c_str(), "1"))
+									{
+										SetWindowText(GetDlgItem(hDlg, IDC_STATIC_TYPE), s2ws("Perpetual. ").c_str());									
+									}
+									else SetWindowText(GetDlgItem(hDlg, IDC_STATIC_TYPE), s2ws("Subscription. ").c_str());
 								}
 							}
 
@@ -317,11 +330,12 @@ INT_PTR CALLBACK ActivationWizard::StepTwoProc(HWND hDlg, UINT uMsg, WPARAM wPar
 					unsigned limit = 0; 
 					std::string expiryDate = "00-00-0000";
 					bool * dataDisabled = 0;
+					unsigned lType = 0;					 
 #if 0
 					if (validate_license("GYXUWBBVKEAEQUAJJJDVSCSHKRFHGQASIICBAVSH", &limit, "p@$$w0rd") == 0)
 #else
 					
-					if (validate_license(narrow.c_str(), &limit, dataDisabled, expiryDate.c_str(), ws2s(g_uniqueid).c_str()) == 0)
+					if (validate_license(narrow.c_str(), &limit, dataDisabled, expiryDate.c_str(), &lType, ws2s(g_uniqueid).c_str()) == 0)
 #endif
 					{
 						wchar_t buf[512] = { 0 };
